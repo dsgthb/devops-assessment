@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dsgthb/devops-assessment/internal/models"
+	"devops-assessment/internal/models"
+
 	"github.com/gin-gonic/gin"
 )
 

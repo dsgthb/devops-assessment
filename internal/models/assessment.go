@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dsgthb/devops-assessment/internal/database"
+	"devops-assessment/internal/database"
 )
 
 // Assessment represents a DevOps maturity assessment

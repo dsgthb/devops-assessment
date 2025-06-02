@@ -14,12 +14,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dsgthb/devops-assessment/internal/auth"
-	"github.com/dsgthb/devops-assessment/internal/config"
-	"github.com/dsgthb/devops-assessment/internal/database"
-	"github.com/dsgthb/devops-assessment/internal/handlers"
-	"github.com/dsgthb/devops-assessment/internal/models"
-	"github.com/dsgthb/devops-assessment/internal/services"
+	"devops-assessment/internal/auth"
+	"devops-assessment/internal/config"
+	"devops-assessment/internal/database"
+	"devops-assessment/internal/handlers"
+	"devops-assessment/internal/models"
+	"devops-assessment/internal/services"
+
 	"github.com/gin-gonic/gin"
 )
 

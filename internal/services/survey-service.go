@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dsgthb/devops-assessment/internal/database"
-	"github.com/dsgthb/devops-assessment/internal/models"
+	"devops-assessment/internal/database"
+	"devops-assessment/internal/models"
 )
 
 // SurveyService handles survey-related business logic

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dsgthb/devops-assessment/internal/database"
+	"devops-assessment/internal/database"
 )
 
 // Role represents a system role

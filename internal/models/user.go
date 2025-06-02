@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dsgthb/devops-assessment/internal/database"
+	"devops-assessment/internal/database"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
