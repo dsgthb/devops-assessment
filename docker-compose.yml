@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: devops-assessment-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8080
+      - SERVER_MODE=release
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=devops
+      - DB_PASSWORD=devops123
+      - DB_NAME=devops_assessment
+      - SESSION_SECRET=your-session-secret-here-change-in-production
+      - CSRF_SECRET=your-csrf-secret-here-change-in-production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - devops-network
+    volumes:
+      - ./uploads:/app/uploads
+      - ./configs:/app/configs:ro
+
+  mysql:
+    image: mysql:8.0
+    container_name: devops-assessment-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=devops_assessment
+      - MYSQL_USER=devops
+      - MYSQL_PASSWORD=devops123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - devops-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: devops-assessment-phpmyadmin
+    restart: unless-stopped
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=devops
+      - PMA_PASSWORD=devops123
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - devops-network
+
+volumes:
+  mysql-data:
+    driver: local
+
+networks:
+  devops-network:
+    driver: bridge
