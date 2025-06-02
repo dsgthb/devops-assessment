@@ -1,0 +1,374 @@
+{{template "base.html" .}}
+
+{{define "styles"}}
+<style>
+    .results-container {
+        max-width: 1200px;
+        margin: 20px auto;
+    }
+    
+    .chart-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .advice-card {
+        background: white;
+        border: 1px solid #007bff;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        transition: transform 0.2s;
+    }
+    
+    .advice-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,123,255,0.2);
+    }
+    
+    .advice-header {
+        background-color: #007bff;
+        color: white;
+        padding: 15px;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .advice-footer {
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        border-radius: 0 0 10px 10px;
+        font-weight: bold;
+    }
+    
+    .resource-link {
+        display: block;
+        padding: 10px 15px;
+        border-bottom: 1px solid #e9ecef;
+        color: #495057;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+    
+    .resource-link:hover {
+        background-color: #f8f9fa;
+        text-decoration: none;
+        color: #007bff;
+    }
+    
+    .resource-link:last-child {
+        border-bottom: none;
+    }
+    
+    .resource-icon {
+        width: 20px;
+        text-align: center;
+        margin-right: 10px;
+        color: #007bff;
+    }
+    
+    .paid-icon {
+        color: #28a745;
+        margin-left: 5px;
+    }
+    
+    .score-summary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .score-summary h2 {
+        font-size: 3rem;
+        margin-bottom: 10px;
+    }
+    
+    .improvement-areas {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .export-buttons {
+        text-align: right;
+        margin-bottom: 20px;
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="container-fluid">
+    <div class="results-container">
+        {{if .Assessment}}
+            <!-- Export Buttons -->
+            <div class="export-buttons">
+                <a href="/api/v1/assessments/{{.Assessment.ID}}/export/csv" 
+                   class="btn btn-success">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </a>
+                <button onclick="window.print()" class="btn btn-secondary">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+
+            <!-- Score Summary -->
+            <div class="score-summary">
+                <h1>DevOps Maturity Assessment Results</h1>
+                {{if .Results.Team}}
+                    <h3>{{.Results.Team.Name}}</h3>
+                {{end}}
+                <p class="mb-0">Completed: {{.Assessment.CompletedAt.Format "January 2, 2006"}}</p>
+            </div>
+        {{end}}
+
+        <!-- Chart -->
+        <div class="chart-container">
+            <canvas id="chartOverallResults" height="100"></canvas>
+        </div>
+
+        <!-- Improvement Areas -->
+        <div class="improvement-areas">
+            <h4><i class="fas fa-lightbulb"></i> Areas for Improvement</h4>
+            <p>The 3 areas where you have the most potential to improve are listed below, together with links to resources that you may find useful.</p>
+        </div>
+
+        <!-- Top 3 Improvement Areas -->
+        <div class="row" id="improvementCards">
+            <!-- Cards will be inserted here by JavaScript -->
+        </div>
+
+        {{if not .Assessment}}
+            <!-- General advice when no specific assessment -->
+            <div class="row">
+                {{$index := 0}}
+                {{range $sectionName, $advice := .Advice}}
+                    {{if ne $sectionName "//"}}
+                        {{if lt $index 3}}
+                            <div class="col-lg-6 mb-4">
+                                <div class="advice-card">
+                                    <h5 class="advice-header">
+                                        <i class="fas fa-chart-line"></i> {{$sectionName}}
+                                    </h5>
+                                    <div class="card-body p-0">
+                                        <div class="p-3">
+                                            <p>{{$advice.Advice}}</p>
+                                            {{if $advice.ReadMore}}
+                                                <div id="readMore{{$sectionName}}" style="display: none;">
+                                                    <p>{{$advice.ReadMore}}</p>
+                                                </div>
+                                                <a href="#" onclick="toggleReadMore('{{$sectionName}}'); return false;">
+                                                    Show more advice >>
+                                                </a>
+                                            {{end}}
+                                        </div>
+                                        <div class="resources-list">
+                                            {{range $advice.Links}}
+                                                <a href="{{.Href}}" target="_blank" class="resource-link">
+                                                    <span class="resource-icon">
+                                                        {{if eq .Type "Video"}}
+                                                            <i class="fas fa-video"></i>
+                                                        {{else if eq .Type "Blog"}}
+                                                            <i class="fab fa-blogger"></i>
+                                                        {{else if eq .Type "Book"}}
+                                                            <i class="fas fa-book-open"></i>
+                                                        {{else if eq .Type "Website"}}
+                                                            <i class="fas fa-link"></i>
+                                                        {{else if eq .Type "Article"}}
+                                                            <i class="fas fa-file-alt"></i>
+                                                        {{end}}
+                                                    </span>
+                                                    {{.Text}}
+                                                    {{if eq .Paid "Yes"}}
+                                                        <span class="paid-icon">
+                                                            <i class="fas fa-dollar-sign"></i>
+                                                        </span>
+                                                    {{end}}
+                                                </a>
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {{$index = add $index 1}}
+                        {{end}}
+                    {{end}}
+                {{end}}
+            </div>
+        {{end}}
+
+        <!-- Link to all resources -->
+        <div class="text-center mt-4">
+            <a href="/resources" class="btn btn-primary btn-lg">
+                <i class="fas fa-book"></i> View All Resources
+            </a>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+    // Chart configuration
+    Chart.defaults.global.animation.duration = 3000;
+
+    {{if .ChartData}}
+    // Initialize radar chart
+    new Chart(document.getElementById("chartOverallResults"), {
+        type: 'radar',
+        data: {
+            labels: {{.ChartData.Labels | json}},
+            datasets: [{
+                lineTension: 0.4,
+                label: '',
+                pointStyle: 'circle',
+                pointRadius: 5,
+                data: {{.ChartData.Data | json}},
+                pointBackgroundColor: 'rgba(99,255,132,1)',
+                backgroundColor: 'rgba(99, 255, 132, 0.2)',
+                borderColor: 'rgba(99,255,132,1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            title: {
+                display: true,
+                text: '{{.ChartData.Title}}',
+                fontSize: 16,
+                fontColor: "black"
+            },
+            tooltips: {
+                custom: function(tooltip) {
+                    if (!tooltip) return;
+                    tooltip.displayColors = false;
+                },
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        return tooltipItem.yLabel + '%';
+                    }
+                }
+            },
+            legend: {
+                display: false
+            },
+            scale: {
+                ticks: {
+                    display: true,
+                    beginAtZero: true,
+                    min: 0,
+                    max: 100,
+                    stepSize: 25,
+                    callback: function(value, index, values) {
+                        return value + '%';
+                    }
+                },
+                pointLabels: {
+                    fontSize: 14,
+                    fontColor: "black"
+                },
+                gridLines: { color: 'rgba(6, 102, 162, 1)' },
+                angleLines: { color: 'rgba(6, 102, 162, 1)' }
+            }
+        }
+    });
+    {{end}}
+
+    // Render improvement cards if we have results
+    {{if .Results}}
+    $(document).ready(function() {
+        const scores = {{.Results.SectionScores | json}};
+        const advice = {{.Advice | json}};
+        
+        // Sort scores by percentage (ascending)
+        scores.sort((a, b) => a.percentage - b.percentage);
+        
+        // Take bottom 3
+        const bottomThree = scores.slice(0, 3);
+        
+        // Render cards
+        const container = $('#improvementCards');
+        bottomThree.forEach((score, index) => {
+            const sectionAdvice = advice[score.section_name];
+            if (sectionAdvice) {
+                const card = renderAdviceCard(score, sectionAdvice, index);
+                container.append(card);
+            }
+        });
+    });
+    
+    function renderAdviceCard(score, advice, index) {
+        const colClass = index < 2 ? 'col-lg-6' : 'col-lg-12';
+        
+        let resourcesHtml = '';
+        advice.Links.forEach(link => {
+            let icon = '';
+            switch(link.Type) {
+                case 'Video': icon = '<i class="fas fa-video"></i>'; break;
+                case 'Blog': icon = '<i class="fab fa-blogger"></i>'; break;
+                case 'Book': icon = '<i class="fas fa-book-open"></i>'; break;
+                case 'Website': icon = '<i class="fas fa-link"></i>'; break;
+                case 'Article': icon = '<i class="fas fa-file-alt"></i>'; break;
+            }
+            
+            const paidIcon = link.Paid === 'Yes' ? '<span class="paid-icon"><i class="fas fa-dollar-sign"></i></span>' : '';
+            
+            resourcesHtml += `
+                <a href="${link.Href}" target="_blank" class="resource-link">
+                    <span class="resource-icon">${icon}</span>
+                    ${link.Text}
+                    ${paidIcon}
+                </a>
+            `;
+        });
+        
+        return `
+            <div class="${colClass} mb-4">
+                <div class="advice-card">
+                    <h5 class="advice-header">
+                        <i class="fas fa-chart-line"></i> ${score.section_name}
+                    </h5>
+                    <div class="card-body p-0">
+                        <div class="p-3">
+                            <p>${advice.Advice}</p>
+                            ${advice.ReadMore ? `
+                                <div id="readMore${score.section_name.replace(/ /g, '')}" style="display: none;">
+                                    <p>${advice.ReadMore}</p>
+                                </div>
+                                <a href="#" onclick="toggleReadMore('${score.section_name.replace(/ /g, '')}'); return false;">
+                                    Show more advice >>
+                                </a>
+                            ` : ''}
+                        </div>
+                        <div class="resources-list">
+                            ${resourcesHtml}
+                        </div>
+                    </div>
+                    <div class="advice-footer">
+                        Your score: ${Math.round(score.percentage)}%
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    {{end}}
+    
+    function toggleReadMore(sectionName) {
+        const element = $('#readMore' + sectionName);
+        element.toggle();
+        
+        const link = element.prev('a');
+        if (element.is(':visible')) {
+            link.text('Show less <<');
+        } else {
+            link.text('Show more advice >>');
+        }
+    }
+</script>
+{{end}}

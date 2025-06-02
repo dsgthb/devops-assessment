@@ -1,0 +1,295 @@
+{{template "base.html" .}}
+
+{{define "styles"}}
+<style>
+    .dashboard-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        margin-bottom: 20px;
+        transition: transform 0.2s;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card {
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .stat-icon {
+        font-size: 3rem;
+        margin-bottom: 10px;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .team-card {
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .team-card:hover {
+        background-color: #f8f9fa;
+        border-color: #007bff !important;
+    }
+    
+    .assessment-item {
+        border-left: 3px solid #007bff;
+        margin-bottom: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+    }
+    
+    .score-badge {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .score-high { color: #28a745; }
+    .score-medium { color: #ffc107; }
+    .score-low { color: #dc3545; }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-xl-10 col-lg-11 mx-auto">
+            <!-- Welcome Section -->
+            <div class="dashboard-card card border-primary">
+                <div class="card-body">
+                    <h2>Welcome back, {{.User.FirstName}}!</h2>
+                    <p class="lead mb-0">DevOps Maturity Assessment Dashboard</p>
+                </div>
+            </div>
+
+            <!-- Statistics Row -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="dashboard-card card">
+                        <div class="card-body stat-card">
+                            <div class="stat-icon text-primary">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <div class="stat-value">{{.Statistics.TotalAssessments}}</div>
+                            <div class="stat-label">Total Assessments</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="dashboard-card card">
+                        <div class="card-body stat-card">
+                            <div class="stat-icon text-success">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-value">{{printf "%.1f%%" .Statistics.AverageScore}}</div>
+                            <div class="stat-label">Average Score</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="dashboard-card card">
+                        <div class="card-body stat-card">
+                            <div class="stat-icon text-info">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-value">{{.Statistics.TeamsAssessed}}</div>
+                            <div class="stat-label">Teams Assessed</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="dashboard-card card">
+                        <div class="card-body stat-card">
+                            <div class="stat-icon text-warning">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="stat-value">{{.Statistics.CompletedThisMonth}}</div>
+                            <div class="stat-label">This Month</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teams and Assessments Row -->
+            <div class="row">
+                <!-- Teams Section -->
+                <div class="col-md-6">
+                    <div class="dashboard-card card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-users"></i> Your Teams</h5>
+                        </div>
+                        <div class="card-body">
+                            {{if .Teams}}
+                                {{range .Teams}}
+                                    <div class="card team-card mb-2" onclick="startAssessment({{.ID}})">
+                                        <div class="card-body">
+                                            <h6 class="mb-1">{{.Name}}</h6>
+                                            <p class="text-muted mb-0 small">{{.Description}}</p>
+                                            <button class="btn btn-sm btn-primary mt-2">
+                                                <i class="fas fa-plus"></i> Start Assessment
+                                            </button>
+                                        </div>
+                                    </div>
+                                {{end}}
+                            {{else}}
+                                <p class="text-muted">You are not assigned to any teams yet.</p>
+                            {{end}}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Assessments Section -->
+                <div class="col-md-6">
+                    <div class="dashboard-card card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-history"></i> Recent Assessments</h5>
+                        </div>
+                        <div class="card-body">
+                            {{if .Assessments}}
+                                {{range .Assessments}}
+                                    <div class="assessment-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0">{{.TeamName}}</h6>
+                                                <small class="text-muted">
+                                                    {{if .Assessment.CompletedAt}}
+                                                        Completed: {{.Assessment.CompletedAt.Format "Jan 2, 2006"}}
+                                                    {{else}}
+                                                        In Progress
+                                                    {{end}}
+                                                </small>
+                                            </div>
+                                            <div>
+                                                {{if .OverallScore}}
+                                                    <span class="score-badge 
+                                                        {{if ge .OverallScore 80}}score-high
+                                                        {{else if ge .OverallScore 50}}score-medium
+                                                        {{else}}score-low{{end}}">
+                                                        {{printf "%.0f%%" .OverallScore}}
+                                                    </span>
+                                                {{end}}
+                                                <a href="/results?assessment_id={{.Assessment.ID}}" 
+                                                   class="btn btn-sm btn-outline-primary ml-2">
+                                                    View Results
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {{end}}
+                            {{else}}
+                                <p class="text-muted">No assessments completed yet.</p>
+                                <a href="#" class="btn btn-primary" onclick="showTeamSelector()">
+                                    <i class="fas fa-plus"></i> Start Your First Assessment
+                                </a>
+                            {{end}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="dashboard-card card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-rocket"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <a href="#" onclick="showTeamSelector()" class="btn btn-primary btn-block">
+                                <i class="fas fa-clipboard-check"></i> New Assessment
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/resources" class="btn btn-info btn-block">
+                                <i class="fas fa-book"></i> Browse Resources
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/results" class="btn btn-success btn-block">
+                                <i class="fas fa-chart-bar"></i> View All Results
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Selection Modal -->
+<div class="modal fade" id="teamModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Team for Assessment</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group" id="teamList">
+                    {{range .Teams}}
+                        <button type="button" class="list-group-item list-group-item-action" 
+                                onclick="startAssessment({{.ID}})">
+                            <h6 class="mb-1">{{.Name}}</h6>
+                            <p class="mb-0 small text-muted">{{.Description}}</p>
+                        </button>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+    function showTeamSelector() {
+        $('#teamModal').modal('show');
+    }
+
+    function startAssessment(teamId) {
+        $('#teamModal').modal('hide');
+        
+        // Start assessment via API
+        fetch('/api/v1/assessments/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ team_id: teamId })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Redirect to first section
+            window.location.href = '/survey/section-introduction';
+        })
+        .catch(error => {
+            console.error('Error starting assessment:', error);
+            alert('Failed to start assessment. Please try again.');
+        });
+    }
+</script>
+{{end}}

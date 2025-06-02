@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Open Graph info -->
+    <meta property="og:title" content="DevOps Maturity Assessment" />
+    <meta property="og:description" content="This online DevOps Assessment questionnaire will help you understand your current strengths and weaknesses and then recommend resources that can support you in taking the next steps on your DevOps journey." />
+    <meta property="og:site_name" content="DevOps Maturity Assessment" />
+    <meta property="og:image" content="/static/og-image.jpg" />
+    <meta property="og:image:width" content="1680" />
+    <meta property="og:image:height" content="870" />
+    
+    <!-- Favicon stuff -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="manifest" href="/static/site.webmanifest">
+    <link rel="mask-icon" href="/static/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#2d89ef">
+    <meta name="theme-color" content="#ffffff">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/fontawesome/css/all.css">
+
+    <title>{{.Title}}</title>
+    <script src="/js/chart.bundle.min.js"></script>
+    <script src="/js/jquery-3.3.1.min.js"></script>
+    
+    <style>
+        #bigwrapper {
+            background-image: url('/static/backdrop.jpg');
+            background-repeat: no-repeat;
+            background-position: top center;
+            background-attachment: fixed;
+            background-size: cover;
+            background-color: RGB(2, 2, 1);
+            padding-top: 70px;
+        }
+    
+        @media (max-width: 355px) { 
+            #bigwrapper { padding-top: 100px; }
+        }
+    </style>
+
+    {{block "styles" .}}{{end}}
+</head>
+
+<body id="bigwrapper">
+    <nav class="navbar navbar-dark bg-primary fixed-top navbar-expand-md form-group">
+        <a href="/dashboard" class="navbar-brand">DevOps Assessment</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                {{if .User}}
+                    {{range $name, $item := .NavBar}}
+                        {{if eq $item.Type "Standard"}}
+                            <li class="nav-item {{if eq $.ActivePage $name}}active{{end}}">
+                                <a href="{{$item.URL}}" class="nav-link">{{$name}}</a>
+                            </li>
+                        {{else if eq $item.Type "Dropdown"}}
+                            <li class="navbar-item dropdown {{if eq $.ActivePage $name}}active{{end}}">
+                                <a href="#" class="nav-link dropdown-toggle" id="navbarDropdown{{$name}}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    {{$name}}
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown{{$name}}">
+                                    {{range $subName, $subItem := $item.Items}}
+                                        {{if eq $subItem.Type "Divider"}}
+                                            <div class="dropdown-divider"></div>
+                                        {{else}}
+                                            <a class="dropdown-item" href="{{$subItem.URL}}">{{$subName}}</a>
+                                        {{end}}
+                                    {{end}}
+                                </div>
+                            </li>
+                        {{end}}
+                    {{end}}
+                    
+                    <li class="navbar-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                            <i class="fas fa-user"></i> {{.User.FirstName}}
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="/api/v1/auth/me">Profile</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" onclick="logout()">Logout</a>
+                        </div>
+                    </li>
+                {{else}}
+                    <li class="nav-item">
+                        <a href="/login" class="nav-link">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/about" class="nav-link">About</a>
+                    </li>
+                {{end}}
+            </ul>
+        </div>
+    </nav>
+
+    {{block "content" .}}{{end}}
+
+    <!-- Bootstrap JS -->
+    <script src="/js/popper.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+
+    <script>
+        // Global logout function
+        function logout() {
+            fetch('/api/v1/auth/logout', {
+                method: 'POST',
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/login';
+                }
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+            });
+        }
+
+        // CSRF token handling
+        function getCSRFToken() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            return meta ? meta.getAttribute('content') : '';
+        }
+
+        // Add CSRF token to all AJAX requests
+        if (window.jQuery) {
+            $.ajaxSetup({
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-CSRF-Token', getCSRFToken());
+                }
+            });
+        }
+    </script>
+
+    {{block "scripts" .}}{{end}}
+</body>
+</html>

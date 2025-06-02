@@ -1,0 +1,139 @@
+{{template "base.html" .}}
+
+{{define "styles"}}
+<style>
+    .error-container {
+        max-width: 600px;
+        margin: 100px auto;
+        text-align: center;
+    }
+    
+    .error-box {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        padding: 40px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .error-icon {
+        font-size: 5rem;
+        color: #dc3545;
+        margin-bottom: 20px;
+    }
+    
+    .error-code {
+        font-size: 6rem;
+        font-weight: bold;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+    
+    .error-message {
+        font-size: 1.5rem;
+        color: #495057;
+        margin-bottom: 30px;
+    }
+    
+    .error-details {
+        color: #6c757d;
+        margin-bottom: 30px;
+    }
+    
+    .btn-group-vertical .btn {
+        margin-bottom: 10px;
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="container">
+    <div class="error-container">
+        <div class="error-box">
+            {{if .StatusCode}}
+                {{if eq .StatusCode 404}}
+                    <div class="error-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="error-code">404</div>
+                    <div class="error-message">Page Not Found</div>
+                    <div class="error-details">
+                        <p>The page you are looking for doesn't exist or has been moved.</p>
+                    </div>
+                {{else if eq .StatusCode 403}}
+                    <div class="error-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="error-code">403</div>
+                    <div class="error-message">Access Denied</div>
+                    <div class="error-details">
+                        <p>You don't have permission to access this resource.</p>
+                    </div>
+                {{else if eq .StatusCode 401}}
+                    <div class="error-icon">
+                        <i class="fas fa-user-lock"></i>
+                    </div>
+                    <div class="error-code">401</div>
+                    <div class="error-message">Authentication Required</div>
+                    <div class="error-details">
+                        <p>Please login to access this page.</p>
+                    </div>
+                {{else if eq .StatusCode 500}}
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="error-code">500</div>
+                    <div class="error-message">Internal Server Error</div>
+                    <div class="error-details">
+                        <p>Something went wrong on our end. Please try again later.</p>
+                    </div>
+                {{else}}
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="error-code">{{.StatusCode}}</div>
+                    <div class="error-message">Error</div>
+                    <div class="error-details">
+                        <p>An unexpected error occurred.</p>
+                    </div>
+                {{end}}
+            {{else}}
+                <div class="error-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="error-message">Oops! Something went wrong</div>
+                <div class="error-details">
+                    {{if .error}}
+                        <p>{{.error}}</p>
+                    {{else}}
+                        <p>An unexpected error occurred. Please try again.</p>
+                    {{end}}
+                </div>
+            {{end}}
+            
+            <div class="btn-group-vertical">
+                {{if .User}}
+                    <a href="/dashboard" class="btn btn-primary">
+                        <i class="fas fa-home"></i> Go to Dashboard
+                    </a>
+                    <a href="javascript:history.back()" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </a>
+                {{else}}
+                    <a href="/login" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                    <a href="/about" class="btn btn-secondary">
+                        <i class="fas fa-info-circle"></i> Learn More
+                    </a>
+                {{end}}
+            </div>
+            
+            <div class="mt-4">
+                <small class="text-muted">
+                    If this problem persists, please contact support.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

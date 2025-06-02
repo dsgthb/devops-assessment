@@ -1,0 +1,346 @@
+{{template "base.html" .}}
+
+{{define "styles"}}
+<style>
+    .resources-container {
+        max-width: 1200px;
+        margin: 20px auto;
+    }
+    
+    .resources-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .resource-section {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .resource-section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .resource-section-header {
+        background-color: #007bff;
+        color: white;
+        padding: 20px;
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+    
+    .resource-section-body {
+        padding: 20px;
+    }
+    
+    .advice-text {
+        margin-bottom: 20px;
+        color: #495057;
+        line-height: 1.6;
+    }
+    
+    .read-more {
+        color: #007bff;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    
+    .read-more:hover {
+        text-decoration: underline;
+    }
+    
+    .resource-item {
+        border-left: 3px solid #007bff;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: #f8f9fa;
+        transition: all 0.3s;
+    }
+    
+    .resource-item:hover {
+        background-color: #e9ecef;
+        border-left-color: #0056b3;
+        transform: translateX(5px);
+    }
+    
+    .resource-type {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-right: 10px;
+    }
+    
+    .type-video { background-color: #dc3545; color: white; }
+    .type-blog { background-color: #fd7e14; color: white; }
+    .type-book { background-color: #6610f2; color: white; }
+    .type-website { background-color: #17a2b8; color: white; }
+    .type-article { background-color: #28a745; color: white; }
+    
+    .paid-badge {
+        background-color: #ffc107;
+        color: #000;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        margin-left: 10px;
+    }
+    
+    .resource-link {
+        color: #495057;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .resource-link:hover {
+        color: #007bff;
+        text-decoration: underline;
+    }
+    
+    .search-container {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .search-input {
+        border: 2px solid #007bff;
+        border-radius: 25px;
+        padding: 10px 20px;
+        font-size: 1.1rem;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+    }
+    
+    .filter-buttons {
+        margin-top: 15px;
+    }
+    
+    .filter-btn {
+        margin: 5px;
+        border-radius: 20px;
+        padding: 5px 15px;
+        font-size: 0.9rem;
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="container-fluid">
+    <div class="resources-container">
+        <!-- Header -->
+        <div class="resources-header">
+            <h1><i class="fas fa-book-open"></i> DevOps Resources</h1>
+            <p class="lead mb-0">Curated resources to help you on your DevOps journey</p>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="search-container">
+            <input type="text" class="form-control search-input" id="searchInput" 
+                   placeholder="Search resources..." onkeyup="filterResources()">
+            
+            <div class="filter-buttons text-center">
+                <button class="btn btn-sm btn-outline-primary filter-btn active" 
+                        onclick="filterByType('all')">All</button>
+                <button class="btn btn-sm btn-outline-danger filter-btn" 
+                        onclick="filterByType('Video')">
+                    <i class="fas fa-video"></i> Videos
+                </button>
+                <button class="btn btn-sm btn-outline-warning filter-btn" 
+                        onclick="filterByType('Blog')">
+                    <i class="fab fa-blogger"></i> Blogs
+                </button>
+                <button class="btn btn-sm btn-outline-primary filter-btn" 
+                        onclick="filterByType('Book')">
+                    <i class="fas fa-book"></i> Books
+                </button>
+                <button class="btn btn-sm btn-outline-info filter-btn" 
+                        onclick="filterByType('Website')">
+                    <i class="fas fa-link"></i> Websites
+                </button>
+                <button class="btn btn-sm btn-outline-success filter-btn" 
+                        onclick="filterByType('Article')">
+                    <i class="fas fa-file-alt"></i> Articles
+                </button>
+            </div>
+        </div>
+
+        <!-- Resources by Section -->
+        <div id="resourceSections">
+            {{range $sectionName, $advice := .Advice}}
+                {{if ne $sectionName "//"}}
+                    <div class="resource-section" data-section="{{$sectionName}}">
+                        <div class="resource-section-header">
+                            <i class="fas fa-chevron-right"></i> {{$sectionName}}
+                        </div>
+                        <div class="resource-section-body">
+                            <div class="advice-text">
+                                <p>{{$advice.Advice}}</p>
+                                {{if $advice.ReadMore}}
+                                    <div id="readMore{{$sectionName | sectionNameToURL}}" style="display: none;">
+                                        {{$advice.ReadMore}}
+                                    </div>
+                                    <a href="#" class="read-more" 
+                                       onclick="toggleReadMore('{{$sectionName | sectionNameToURL}}'); return false;">
+                                        Show more advice <i class="fas fa-chevron-down"></i>
+                                    </a>
+                                {{end}}
+                            </div>
+                            
+                            <div class="resources-list">
+                                {{range $advice.Links}}
+                                    <div class="resource-item" data-type="{{.Type}}" 
+                                         data-text="{{.Text}} {{.Href}}">
+                                        <div>
+                                            <span class="resource-type type-{{.Type | lower}}">
+                                                {{if eq .Type "Video"}}
+                                                    <i class="fas fa-video"></i> Video
+                                                {{else if eq .Type "Blog"}}
+                                                    <i class="fab fa-blogger"></i> Blog
+                                                {{else if eq .Type "Book"}}
+                                                    <i class="fas fa-book"></i> Book
+                                                {{else if eq .Type "Website"}}
+                                                    <i class="fas fa-link"></i> Website
+                                                {{else if eq .Type "Article"}}
+                                                    <i class="fas fa-file-alt"></i> Article
+                                                {{end}}
+                                            </span>
+                                            {{if eq .Paid "Yes"}}
+                                                <span class="paid-badge">
+                                                    <i class="fas fa-dollar-sign"></i> Paid
+                                                </span>
+                                            {{end}}
+                                        </div>
+                                        <div class="mt-2">
+                                            <a href="{{.Href}}" target="_blank" class="resource-link">
+                                                {{.Text}}
+                                            </a>
+                                        </div>
+                                    </div>
+                                {{end}}
+                            </div>
+                        </div>
+                    </div>
+                {{end}}
+            {{end}}
+        </div>
+
+        <!-- No results message -->
+        <div id="noResults" class="text-center py-5" style="display: none;">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No resources found</h4>
+            <p class="text-muted">Try adjusting your search or filters</p>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+    let currentFilter = 'all';
+
+    function toggleReadMore(sectionName) {
+        const element = $('#readMore' + sectionName);
+        element.toggle();
+        
+        const link = element.prev('.read-more');
+        if (element.is(':visible')) {
+            link.html('Show less <i class="fas fa-chevron-up"></i>');
+        } else {
+            link.html('Show more advice <i class="fas fa-chevron-down"></i>');
+        }
+    }
+
+    function filterByType(type) {
+        currentFilter = type;
+        
+        // Update button states
+        $('.filter-btn').removeClass('active');
+        if (type === 'all') {
+            $('.filter-btn:first').addClass('active');
+        } else {
+            $('.filter-btn').each(function() {
+                if ($(this).text().includes(type)) {
+                    $(this).addClass('active');
+                }
+            });
+        }
+        
+        filterResources();
+    }
+
+    function filterResources() {
+        const searchTerm = $('#searchInput').val().toLowerCase();
+        let visibleSections = 0;
+        
+        // Filter sections
+        $('.resource-section').each(function() {
+            const section = $(this);
+            const sectionName = section.data('section').toLowerCase();
+            let visibleItems = 0;
+            
+            // Filter items within section
+            section.find('.resource-item').each(function() {
+                const item = $(this);
+                const itemType = item.data('type');
+                const itemText = item.data('text').toLowerCase();
+                
+                const matchesType = currentFilter === 'all' || itemType === currentFilter;
+                const matchesSearch = searchTerm === '' || 
+                                    itemText.includes(searchTerm) || 
+                                    sectionName.includes(searchTerm);
+                
+                if (matchesType && matchesSearch) {
+                    item.show();
+                    visibleItems++;
+                } else {
+                    item.hide();
+                }
+            });
+            
+            // Show/hide section based on visible items
+            if (visibleItems > 0) {
+                section.show();
+                visibleSections++;
+            } else {
+                section.hide();
+            }
+        });
+        
+        // Show/hide no results message
+        if (visibleSections === 0) {
+            $('#noResults').show();
+        } else {
+            $('#noResults').hide();
+        }
+    }
+
+    // Smooth scroll to section when clicking section headers
+    $('.resource-section-header').click(function() {
+        const content = $(this).next('.resource-section-body');
+        content.slideToggle();
+        
+        const icon = $(this).find('i');
+        if (icon.hasClass('fa-chevron-right')) {
+            icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+        } else {
+            icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+        }
+    });
+</script>
+{{end}}

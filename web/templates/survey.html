@@ -1,0 +1,381 @@
+{{template "base.html" .}}
+
+{{define "styles"}}
+<style>
+    .survey-container {
+        max-width: 1000px;
+        margin: 20px auto;
+    }
+    
+    .section-header {
+        background-color: #007bff;
+        color: white;
+        padding: 20px;
+        border-radius: 10px 10px 0 0;
+        text-align: center;
+    }
+    
+    .question-card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #007bff;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        transition: box-shadow 0.3s;
+    }
+    
+    .question-card:hover {
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.2);
+    }
+    
+    .question-header {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+        font-weight: 500;
+    }
+    
+    .question-body {
+        padding: 20px;
+        background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+    }
+    
+    .custom-control-label {
+        cursor: pointer;
+        padding-left: 10px;
+    }
+    
+    .custom-control-input:checked ~ .custom-control-label {
+        color: #007bff;
+        font-weight: 500;
+    }
+    
+    .progress-container {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .section-progress {
+        margin-bottom: 10px;
+    }
+    
+    .btn-navigation {
+        min-width: 120px;
+    }
+    
+    .banner-question {
+        background: #e3f2fd;
+        border: 1px solid #90caf9;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="container-fluid">
+    <div class="survey-container">
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <h6>Assessment Progress</h6>
+            <div class="progress section-progress">
+                <div class="progress-bar" role="progressbar" id="progressBar" 
+                     style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    0%
+                </div>
+            </div>
+            <small class="text-muted">Section <span id="currentSection">1</span> of <span id="totalSections">7</span></small>
+        </div>
+
+        <!-- Section Content -->
+        <div class="card">
+            <div class="section-header">
+                <h3 id="sectionTitle">Loading...</h3>
+            </div>
+            
+            <div class="card-body bg-light">
+                <form id="surveyForm" onsubmit="return false;">
+                    <div id="questionsContainer">
+                        <!-- Questions will be loaded here dynamically -->
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <div class="btn-group btn-group-justified" role="group">
+                    <button type="button" class="btn btn-primary btn-navigation" 
+                            id="previousButton" onclick="navigateSection('previous')">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="button" class="btn btn-primary btn-navigation" 
+                            id="nextButton" onclick="navigateSection('next')">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                <button type="button" class="btn btn-success btn-navigation ml-2" 
+                        id="resultsButton" onclick="completeAssessment()" style="display: none;">
+                    <i class="fas fa-chart-bar"></i> View Results
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+    // Global variables
+    let currentAssessment = null;
+    let currentSurvey = null;
+    let currentSectionIndex = 0;
+    let currentSectionName = '{{.Section}}';
+
+    // Initialize on page load
+    $(document).ready(function() {
+        loadAssessment();
+    });
+
+    function loadAssessment() {
+        // Get or create assessment
+        const assessmentId = localStorage.getItem('currentAssessmentId');
+        
+        if (assessmentId) {
+            // Load existing assessment
+            fetch(`/api/v1/assessments/${assessmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    currentAssessment = data.assessment;
+                    currentSurvey = data.survey;
+                    initializeSurvey();
+                })
+                .catch(error => {
+                    console.error('Error loading assessment:', error);
+                    // Start new assessment
+                    showTeamSelector();
+                });
+        } else {
+            // No assessment in progress
+            showTeamSelector();
+        }
+    }
+
+    function showTeamSelector() {
+        // In a real implementation, this would show a modal to select team
+        // For now, we'll just redirect to dashboard
+        window.location.href = '/dashboard';
+    }
+
+    function initializeSurvey() {
+        // Find current section index
+        for (let i = 0; i < currentSurvey.sections.length; i++) {
+            if (sectionNameToURL(currentSurvey.sections[i].SectionName) === currentSectionName.replace('section-', '')) {
+                currentSectionIndex = i;
+                break;
+            }
+        }
+
+        // Update UI
+        updateProgress();
+        renderSection();
+    }
+
+    function sectionNameToURL(name) {
+        return name.toLowerCase().replace(/,/g, '').replace(/ /g, '-');
+    }
+
+    function updateProgress() {
+        const totalSections = currentSurvey.sections.length;
+        const progress = ((currentSectionIndex + 1) / totalSections) * 100;
+        
+        $('#progressBar').css('width', progress + '%').attr('aria-valuenow', progress).text(Math.round(progress) + '%');
+        $('#currentSection').text(currentSectionIndex + 1);
+        $('#totalSections').text(totalSections);
+    }
+
+    function renderSection() {
+        const section = currentSurvey.sections[currentSectionIndex];
+        $('#sectionTitle').text(section.SectionName);
+        
+        // Clear questions container
+        const container = $('#questionsContainer');
+        container.empty();
+        
+        // Render questions
+        section.Questions.forEach((question, index) => {
+            if (question.Type === 'Banner') {
+                container.append(renderBannerQuestion(question));
+            } else {
+                container.append(renderQuestion(question, index));
+            }
+        });
+        
+        // Update navigation buttons
+        updateNavigationButtons();
+    }
+
+    function renderBannerQuestion(question) {
+        return `
+            <div class="banner-question">
+                ${question.QuestionText}
+            </div>
+        `;
+    }
+
+    function renderQuestion(question, index) {
+        let answersHtml = '';
+        
+        if (question.Type === 'Option') {
+            // Radio buttons
+            question.Answers.forEach(answer => {
+                const checked = answer.Value === 'checked' ? 'checked' : '';
+                answersHtml += `
+                    <div class="custom-control custom-radio my-2">
+                        <input type="radio" class="custom-control-input" 
+                               id="${answer.ID}" name="${question.ID}" 
+                               value="${answer.ID}" ${checked}>
+                        <label class="custom-control-label" for="${answer.ID}">
+                            ${answer.Answer}
+                        </label>
+                    </div>
+                `;
+            });
+        } else if (question.Type === 'Checkbox') {
+            // Checkboxes
+            question.Answers.forEach(answer => {
+                const checked = answer.Value === 'checked' ? 'checked' : '';
+                answersHtml += `
+                    <div class="custom-control custom-checkbox my-2">
+                        <input type="checkbox" class="custom-control-input" 
+                               id="${answer.ID}" name="${answer.ID}" ${checked}>
+                        <input type="hidden" name="${answer.ID}-hidden" value="0">
+                        <label class="custom-control-label" for="${answer.ID}">
+                            ${answer.Answer}
+                        </label>
+                    </div>
+                `;
+            });
+        }
+        
+        return `
+            <div class="question-card">
+                ${question.SubCategory ? `<div class="text-muted small px-3 pt-2">${question.SubCategory}</div>` : ''}
+                <h6 class="question-header">${question.QuestionText}</h6>
+                <div class="question-body">
+                    ${answersHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    function updateNavigationButtons() {
+        // Previous button
+        if (currentSectionIndex === 0) {
+            $('#previousButton').hide();
+        } else {
+            $('#previousButton').show();
+        }
+        
+        // Next/Results button
+        if (currentSectionIndex === currentSurvey.sections.length - 1) {
+            $('#nextButton').hide();
+            $('#resultsButton').show();
+        } else {
+            $('#nextButton').show();
+            $('#resultsButton').hide();
+        }
+    }
+
+    function navigateSection(direction) {
+        // Save current section responses first
+        saveCurrentSection(() => {
+            if (direction === 'next' && currentSectionIndex < currentSurvey.sections.length - 1) {
+                currentSectionIndex++;
+            } else if (direction === 'previous' && currentSectionIndex > 0) {
+                currentSectionIndex--;
+            }
+            
+            // Update URL
+            const newSection = currentSurvey.sections[currentSectionIndex];
+            const newURL = '/survey/section-' + sectionNameToURL(newSection.SectionName);
+            window.history.pushState({}, '', newURL);
+            currentSectionName = 'section-' + sectionNameToURL(newSection.SectionName);
+            
+            // Re-render
+            updateProgress();
+            renderSection();
+        });
+    }
+
+    function saveCurrentSection(callback) {
+        // Collect form data
+        const formData = new FormData(document.getElementById('surveyForm'));
+        const responses = {};
+        
+        for (let [key, value] of formData.entries()) {
+            if (!key.endsWith('-hidden')) {
+                if (!responses[key]) {
+                    responses[key] = [];
+                }
+                responses[key].push(value);
+            }
+        }
+        
+        // Save via API
+        const sectionName = sectionNameToURL(currentSurvey.sections[currentSectionIndex].SectionName);
+        
+        fetch(`/api/v1/assessments/${currentAssessment.id}/sections/${sectionName}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ responses: responses })
+        })
+        .then(response => {
+            if (response.ok) {
+                if (callback) callback();
+            } else {
+                throw new Error('Failed to save responses');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving responses:', error);
+            alert('Failed to save responses. Please try again.');
+        });
+    }
+
+    function completeAssessment() {
+        // Save current section first
+        saveCurrentSection(() => {
+            // Complete assessment via API
+            fetch(`/api/v1/assessments/${currentAssessment.id}/complete`, {
+                method: 'POST',
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Clear stored assessment ID
+                localStorage.removeItem('currentAssessmentId');
+                
+                // Redirect to results
+                window.location.href = `/results?assessment_id=${currentAssessment.id}`;
+            })
+            .catch(error => {
+                console.error('Error completing assessment:', error);
+                alert('Failed to complete assessment. Please try again.');
+            });
+        });
+    }
+
+    // Handle browser back/forward buttons
+    window.onpopstate = function(event) {
+        location.reload();
+    };
+</script>
+{{end}}

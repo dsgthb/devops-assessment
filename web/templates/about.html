@@ -1,0 +1,238 @@
+{{template "base.html" .}}
+
+{{define "styles"}}
+<style>
+    .about-container {
+        max-width: 1000px;
+        margin: 20px auto;
+    }
+    
+    .jumbotron {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #007bff;
+    }
+    
+    .feature-box {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .feature-icon {
+        font-size: 4rem;
+        color: #007bff;
+        margin-bottom: 20px;
+    }
+    
+    .team-section {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 30px;
+        border-radius: 10px;
+        margin-top: 30px;
+    }
+    
+    .team-member {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .team-photo {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        border: 3px solid #007bff;
+        margin-bottom: 15px;
+        object-fit: cover;
+    }
+    
+    .social-links a {
+        color: #495057;
+        font-size: 1.5rem;
+        margin: 0 10px;
+        transition: color 0.3s;
+    }
+    
+    .social-links a:hover {
+        color: #007bff;
+    }
+    
+    .linkedin-icon { color: #0078B5; }
+    .twitter-icon { color: #00A3F3; }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="container-fluid">
+    <div class="about-container">
+        <!-- Main Jumbotron -->
+        <section class="jumbotron text-center">
+            <div class="container">
+                <h1 class="jumbotron-heading">DevOps Maturity Assessment</h1>
+                <p class="lead">This online DevOps Assessment questionnaire will help you understand your current strengths and weaknesses and then recommend resources that can support you in taking the next steps on your DevOps journey.</p>
+                <p>
+                    <a href="/login" class="btn btn-primary">Get Started</a>
+                    <a href="/resources" class="btn btn-secondary">Browse Resources</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <h2>Understand Where You Are</h2>
+                    <p class="text-justify">Our set of carefully designed questions across 7 different areas will help you quickly establish your current level of DevOps maturity.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-shoe-prints"></i>
+                    </div>
+                    <h2>Identify Your Next Steps</h2>
+                    <p class="text-justify">For each area a curated range of free or commercially available books, videos, blog posts, white papers and websites that will help you take the next steps on your DevOps journey.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h2>Fast and Simple to Assess</h2>
+                    <p class="text-justify">You can view the results online as well as downloading them in CSV format for more detailed analysis. Track your progress over time with persistent storage.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy Notice -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-shield-alt"></i> 
+                    <strong>Privacy First:</strong> We respect your data privacy. All assessment data is stored securely and never shared with third parties.
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Section -->
+        <section class="team-section">
+            <div class="container">
+                <h2 class="text-center mb-4">Meet The Team</h2>
+                <p class="lead text-center mb-5">This tool was created by DevOps practitioners with contributions from many experts globally.</p>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="team-member">
+                            <img src="/static/team-photos/default-avatar.png" alt="Team Member" class="team-photo">
+                            <h5>DevOps Expert One</h5>
+                            <p class="text-muted">Lead DevOps Engineer</p>
+                            <div class="social-links">
+                                <a href="#" class="linkedin-icon"><i class="fab fa-linkedin"></i></a>
+                                <a href="#" class="twitter-icon"><i class="fab fa-twitter"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="team-member">
+                            <img src="/static/team-photos/default-avatar.png" alt="Team Member" class="team-photo">
+                            <h5>DevOps Expert Two</h5>
+                            <p class="text-muted">Senior SRE</p>
+                            <div class="social-links">
+                                <a href="#" class="linkedin-icon"><i class="fab fa-linkedin"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="team-member">
+                            <img src="/static/team-photos/default-avatar.png" alt="Team Member" class="team-photo">
+                            <h5>DevOps Expert Three</h5>
+                            <p class="text-muted">Cloud Architect</p>
+                            <div class="social-links">
+                                <a href="#" class="linkedin-icon"><i class="fab fa-linkedin"></i></a>
+                                <a href="#" class="twitter-icon"><i class="fab fa-twitter"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-4">
+                        <div class="team-member">
+                            <img src="/static/team-photos/default-avatar.png" alt="Team Member" class="team-photo">
+                            <h5>DevOps Expert Four</h5>
+                            <p class="text-muted">Platform Engineer</p>
+                            <div class="social-links">
+                                <a href="#" class="linkedin-icon"><i class="fab fa-linkedin"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="team-member">
+                            <img src="/static/team-photos/default-avatar.png" alt="Team Member" class="team-photo">
+                            <h5>DevOps Expert Five</h5>
+                            <p class="text-muted">DevOps Consultant</p>
+                            <div class="social-links">
+                                <a href="#" class="linkedin-icon"><i class="fab fa-linkedin"></i></a>
+                                <a href="#" class="twitter-icon"><i class="fab fa-twitter"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technology Stack -->
+        <div class="row mt-5">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Technology Stack</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <i class="fab fa-golang fa-3x text-info"></i>
+                                <p class="mt-2">Go (Golang)</p>
+                            </div>
+                            <div class="col-md-3">
+                                <i class="fas fa-database fa-3x text-warning"></i>
+                                <p class="mt-2">MySQL</p>
+                            </div>
+                            <div class="col-md-3">
+                                <i class="fab fa-bootstrap fa-3x text-purple"></i>
+                                <p class="mt-2">Bootstrap</p>
+                            </div>
+                            <div class="col-md-3">
+                                <i class="fab fa-docker fa-3x text-primary"></i>
+                                <p class="mt-2">Docker</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- License -->
+        <div class="row mt-4 mb-5">
+            <div class="col-lg-12 text-center">
+                <p class="text-muted">
+                    <i class="fas fa-code-branch"></i> 
+                    Open Source | MIT License | 
+                    <a href="https://github.com/dsgthb/devops-assessment" target="_blank">
+                        Fork on GitHub
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
